@@ -31,9 +31,9 @@ def subtractor (state:AgentState)->AgentState:
 
 def decide_next_node(state: AgentState) -> AgentState:
     if state["operator"] == "+":
-        return "add_node"
+        return "adder"
     elif state["operator"] == "-":
-        return "subtract_node"
+        return "subtractor"
 
 graph = StateGraph(AgentState)
 graph.add_node("add_node", adder)
@@ -41,3 +41,25 @@ graph.add_node("subtract_node", subtractor)
 graph.add_node("decider", lambda state:state)
 
 graph.add_edge(START, "decider")
+graph.add_conditional_edges("decider",
+                            decide_next_node,
+                            {"adder": "add_node", "subtractor": "subtract_node"}
+                            )
+graph.add_edge("add_node", END)
+graph.add_edge("subtract_node", END)
+
+graph = graph.compile()
+
+result= graph.invoke({
+    "first_num": 10,
+    "second_num": 5,
+    "operator": "+"
+})
+print(result["result"])  # Should print 15
+
+result = graph.invoke({
+    "first_num": 10,
+    "second_num": 5,
+    "operator": "-"
+})
+print(result["result"])  # Should print 5
